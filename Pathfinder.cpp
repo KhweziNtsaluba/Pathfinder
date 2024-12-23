@@ -11,6 +11,7 @@
 
 using namespace std;
 
+void readFromFile(const char *);
 bool inList(const vector<Node*> &, pair<int,int>);
 int findSmallestF(const vector<Node*> &);
 vector<Node*> FindShortestPath(pair<int,int>, pair<int,int>, Grid&);
@@ -21,51 +22,35 @@ bool isPollingEvent();
 void clearMemory();
 void initTTF();
 
+int rows = 0, columns = 0;
+pair<int,int> startPos(0,0), endPos(0,0); // coordinates of form (row,column)
+string gridString;
+
 SDL_Renderer *renderer;
 SDL_Window *window;
 SDL_Event windowEvent;
-SDL_Texture *texture1;
+SDL_Texture **textures;
+SDL_Rect *rects;
 TTF_Font *font;
 
 
 int main(){
-//     int rows = 0, columns = 0;
-//     string temp, gridString;
-//     pair<int,int> startPos(0,0), endPos(0,0); // coordinates of form (row,column)
-//     bool startFound = false, endFound = false;
-//     ifstream inFile("SourceFile.txt");
+    
+    readFromFile("SourceFile.txt");
+    columns =  gridString.size()/rows;
 
-//     while (!inFile.eof()){
-//         getline(inFile, temp);
-//         gridString.append(temp);
+   /* cout << temp[temp.size()-1] << endl;
+    cout << gridString.size() << endl;
+    cout << "Columns: " << gridString.size()/rows << endl;
+    cout << "Rows: " << rows << endl << endl;
+   cout << startPos.first << "," <<  startPos.second << endl;
+   cout << endPos.first << "," <<  endPos.second << endl;*/
+    Grid matrix(rows,columns,gridString);
+    FindShortestPath(startPos, endPos, matrix);
 
-//         if(!startFound || !endFound){
-//             for(int i = 0; i < temp.size(); i++){
-//                 if(temp[i] == 'S'){ // only one starting position
-//                     startPos.first = rows;
-//                     startPos.second = i;
-//                     startFound = true;
-//                 }
-//                 else if (temp[i] == 'E'){ // only one ending position
-//                     endPos.first = rows;
-//                     endPos.second = i;
-//                     endFound = true;
-//                 }
-//             }
-//         }
-//         rows++;
-//     }
-//     columns =  gridString.size()/rows;
-//    /* cout << temp[temp.size()-1] << endl;
-//     cout << gridString.size() << endl;
-//     cout << "Columns: " << gridString.size()/rows << endl;
-//     cout << "Rows: " << rows << endl << endl;
-//    cout << startPos.first << "," <<  startPos.second << endl;
-//    cout << endPos.first << "," <<  endPos.second << endl;*/
-//     Grid matrix(rows,columns,gridString);
-//     FindShortestPath(startPos, endPos, matrix);
+    textures = new SDL_Texture*[rows];
+    rects = new SDL_Rect[rows];
 
-    SDL_Rect rect1, rect2;
 
     // Testing rerendering text
     char const *words[] = {"Hello", "beautiful \n majestic", "world", "How", "are", "you", "today?"};
@@ -73,7 +58,16 @@ int main(){
     createWindow();
     initTTF();
 
-    get_text_and_rect(renderer, 0, 0, "hello", font, &texture1, &rect1);
+    // populate texture and rect arrays
+    for(int i=0; i<rows; i++){
+        if(i == 0){
+            get_text_and_rect(renderer, 0, 0, "hello", font, &textures[i], &rects[i]);
+        }
+        else{
+            get_text_and_rect(renderer, 0, rects[i-1].y + rects[i-1].h, "hello", font, &textures[i], &rects[i]);
+        }
+    }
+
     // get_text_and_rect(renderer, 0, rect1.y + rect1.h, "world", font, &texture2, &rect2);
 
     int counter=0;
@@ -81,14 +75,11 @@ int main(){
 
     while (isPollingEvent()) {
 
-        if(counter < 7)
-            get_text_and_rect(renderer, 0, 0, words[counter], font, &texture1, &rect1);
-
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
         SDL_RenderClear(renderer);
 
-        SDL_RenderCopy(renderer, texture1, NULL, &rect1);
-        // SDL_RenderCopy(renderer, texture2, NULL, &rect2);
+        for(int i=0; i<rows; i++)
+            SDL_RenderCopy(renderer, textures[i], NULL, &rects[i]);
 
         SDL_RenderPresent(renderer);
 
@@ -101,7 +92,37 @@ int main(){
     return 0;
 }
 
-bool inList(const vector<Node*> &list, pair<int,int> co_ordinates){
+void readFromFile(const char * filename)
+{
+    string temp;
+    bool startFound = false, endFound = false;
+
+    ifstream inFile(filename);
+
+    while (!inFile.eof()){
+        getline(inFile, temp);
+        gridString.append(temp);
+
+        if(!startFound || !endFound){
+            for(int i = 0; i < temp.size(); i++){
+                if(temp[i] == 'S'){ // only one starting position
+                    startPos.first = rows;
+                    startPos.second = i;
+                    startFound = true;
+                }
+                else if (temp[i] == 'E'){ // only one ending position
+                    endPos.first = rows;
+                    endPos.second = i;
+                    endFound = true;
+                }
+            }
+        }
+        rows++;
+    }
+}
+
+bool inList(const vector<Node *> &list, pair<int, int> co_ordinates)
+{
     for (Node* n : list){
         if((n->getCoords().first == co_ordinates.first) && (n->getCoords().second == co_ordinates.second)){
             return true;
@@ -227,7 +248,10 @@ bool isPollingEvent(){
 
 void clearMemory(){
     /* Deinit TTF. */
-    SDL_DestroyTexture(texture1);
+    for(int i=0; i<rows; i++){
+        SDL_DestroyTexture(textures[i]);
+    }
+
     TTF_Quit();
 
     SDL_DestroyRenderer(renderer);
