@@ -33,4 +33,7 @@ $(EXEC): $(OBJS)
 clean:
 	rm -f $(EXEC) $(OBJS)
 
-.PHONY: all clean
+.PHONY: all clean run
+
+run: $(EXEC)
+	./$(EXEC)
