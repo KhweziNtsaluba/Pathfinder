@@ -2,6 +2,9 @@
 #include "Grid.h"
 using namespace std;
 
+void get_text_and_rect(SDL_Renderer *, int, int, string,
+        TTF_Font *, SDL_Texture **, SDL_Rect *, int);
+
 Node::Node() : Node(0,0)
 {}
 
@@ -60,12 +63,19 @@ float Grid::getDist(pair<int,int> coord1,pair<int,int> coord2){
     return distance;
 }
 
-void Grid::drawGrid() const{
+void Grid::drawGrid(SDL_Texture **textures, SDL_Rect *rects, TTF_Font *font, SDL_Renderer *renderer) const{
     for(int i = 0; i < rowCount; i++){
+        string temp = "";
         for (int j = 0; j < colCount; j++){
-          cout << grid2D[i][j]->symbol; 
+           temp += grid2D[i][j]->symbol; 
         }
-        cout << endl;
+
+        if(i == 0){
+            get_text_and_rect(renderer, 0, 0, temp, font, &textures[i], &rects[i], i);
+        }
+        else{
+            get_text_and_rect(renderer, 0, rects[i-1].y + rects[i-1].h, temp, font, &textures[i], &rects[i], i);
+        }
     }
 }
 

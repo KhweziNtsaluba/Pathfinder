@@ -4,6 +4,9 @@
 #include <iostream>
 #include <utility>
 #include <cmath>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_ttf.h>
+
 using namespace std;
 
 class Node{
@@ -51,7 +54,7 @@ class Grid{
     float getDist(pair<int,int>, pair<int,int>);
     bool validIndex(int, int) const;
     Node* getNode(int, int);
-    void drawGrid() const;
+    void drawGrid(SDL_Texture**, SDL_Rect*, TTF_Font*, SDL_Renderer*) const;
     void addNeighbours(Node*);
     ~Grid();
 

@@ -8,6 +8,7 @@
 #include "Grid.h"
 #include <vector>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -15,8 +16,8 @@ void readFromFile(const char *);
 bool inList(const vector<Node*> &, pair<int,int>);
 int findSmallestF(const vector<Node*> &);
 vector<Node*> FindShortestPath(pair<int,int>, pair<int,int>, Grid&);
-void get_text_and_rect(SDL_Renderer *, int, int, const char *,
-        TTF_Font *, SDL_Texture **, SDL_Rect *);
+void get_text_and_rect(SDL_Renderer *, int, int, string,
+        TTF_Font *, SDL_Texture **, SDL_Rect *, int);
 void createWindow();
 bool isPollingEvent();
 void clearMemory();
@@ -35,7 +36,7 @@ TTF_Font *font;
 
 
 int main(){
-    
+
     readFromFile("SourceFile.txt");
     columns =  gridString.size()/rows;
 
@@ -46,10 +47,14 @@ int main(){
    cout << startPos.first << "," <<  startPos.second << endl;
    cout << endPos.first << "," <<  endPos.second << endl;*/
     Grid matrix(rows,columns,gridString);
-    FindShortestPath(startPos, endPos, matrix);
 
     textures = new SDL_Texture*[rows];
     rects = new SDL_Rect[rows];
+
+    // initialising texture array
+    for(int i=0; i<rows; i++){
+        textures[i] = nullptr;
+    }
 
 
     // Testing rerendering text
@@ -58,34 +63,18 @@ int main(){
     createWindow();
     initTTF();
 
+    FindShortestPath(startPos, endPos, matrix);
+
     // populate texture and rect arrays
-    for(int i=0; i<rows; i++){
-        if(i == 0){
-            get_text_and_rect(renderer, 0, 0, "hello", font, &textures[i], &rects[i]);
-        }
-        else{
-            get_text_and_rect(renderer, 0, rects[i-1].y + rects[i-1].h, "hello", font, &textures[i], &rects[i]);
-        }
-    }
+    // for(int i=0; i<rows; i++){
+    //     if(i == 0){
+    //         get_text_and_rect(renderer, 0, 0, "hello", font, &textures[i], &rects[i]);
+    //     }
+    //     else{
+    //         get_text_and_rect(renderer, 0, rects[i-1].y + rects[i-1].h, "hello", font, &textures[i], &rects[i]);
+    //     }
+    // }
 
-    // get_text_and_rect(renderer, 0, rect1.y + rect1.h, "world", font, &texture2, &rect2);
-
-    int counter=0;
-
-
-    while (isPollingEvent()) {
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        SDL_RenderClear(renderer);
-
-        for(int i=0; i<rows; i++)
-            SDL_RenderCopy(renderer, textures[i], NULL, &rects[i]);
-
-        SDL_RenderPresent(renderer);
-
-        SDL_Delay(1000);
-        counter++;
-    }
 
     clearMemory();
  
@@ -94,7 +83,7 @@ int main(){
 
 void readFromFile(const char * filename)
 {
-    string temp;
+    string temp = "";
     bool startFound = false, endFound = false;
 
     ifstream inFile(filename);
@@ -119,6 +108,10 @@ void readFromFile(const char * filename)
         }
         rows++;
     }
+
+    // remove carriage return
+    char ch = '\r';
+    gridString.erase(remove(gridString.begin(), gridString.end(), ch), gridString.end());
 }
 
 bool inList(const vector<Node *> &list, pair<int, int> co_ordinates)
@@ -150,81 +143,82 @@ vector<Node*> FindShortestPath(pair<int,int> startNode, pair<int,int> targetNode
     vector<Node*> openList, closedList;
     Node* current, *temp;
     bool isFound = false;
-    int isleep = 0;
 
     temp = grid.getNode(startNode.first, startNode.second);
     openList.push_back(temp);
 
-    while(!openList.empty() && !isFound){
-        int minIndex;
-        isleep++;
+    while (isPollingEvent()) {
 
-        // find smallest F cost in open list
-        minIndex = findSmallestF(openList);
-       // cout << minIndex;
+        if(!openList.empty() && !isFound){
+            int minIndex;
 
-        current = openList[minIndex];
-        openList.erase(openList.begin() + minIndex);
-        closedList.push_back(current);
-        current->setSymbol('.');
+            // find smallest F cost in open list
+            minIndex = findSmallestF(openList);
+            // cout << minIndex;
 
-        if((current->getCoords().first == targetNode.first) && (current->getCoords().second == targetNode.second)){ //target is found
-            isFound = true;
-            continue;
-        }
+            current = openList[minIndex];
+            openList.erase(openList.begin() + minIndex);
+            closedList.push_back(current);
+            current->setSymbol('.');
 
-        //Process neighbours of current
-        grid.addNeighbours(current);
-
-        int i = 0;
-        while(current->getNeighbour(i) != nullptr && i < 8)
-        {
-           // cout << i;
-            Node* neighbourNode = current->getNeighbour(i++);
-           // cout << i;
-            if (neighbourNode->blocked() || inList(closedList, neighbourNode->getCoords()))
-            {
+            if((current->getCoords().first == targetNode.first) && (current->getCoords().second == targetNode.second)){ //target is found
+                isFound = true;
                 continue;
             }
-           // cout << i;
-            float newGcost = current->getG() + grid.getDist(current->getCoords(),neighbourNode->getCoords());
 
-            if(newGcost < neighbourNode->getG() || !inList(openList, neighbourNode->getCoords())){
-                neighbourNode->setG(newGcost);
-                neighbourNode->setParent(current);
-                
-                if(!inList(openList, neighbourNode->getCoords())){
-                    openList.push_back(neighbourNode);
+            //Process neighbours of current
+            grid.addNeighbours(current);
+
+            int i = 0;
+            while(current->getNeighbour(i) != nullptr && i < 8)
+            {
+                Node* neighbourNode = current->getNeighbour(i++);
+                if (neighbourNode->blocked() || inList(closedList, neighbourNode->getCoords()))
+                {
+                    continue;
                 }
+                float newGcost = current->getG() + grid.getDist(current->getCoords(),neighbourNode->getCoords());
 
+                if(newGcost < neighbourNode->getG() || !inList(openList, neighbourNode->getCoords())){
+                    neighbourNode->setG(newGcost);
+                    neighbourNode->setParent(current);
+                    
+                    if(!inList(openList, neighbourNode->getCoords())){
+                        openList.push_back(neighbourNode);
+                    }
+
+                }
+                
             }
-            
+        }
+        
+        if(!isFound){
+            cout << "No path found" << endl;}
+        else{
+            //traceback
+            Node* temp = grid.getNode(targetNode.first,targetNode.second);
+            while(temp->getCoords().first != startNode.first || temp->getCoords().second != startNode.second){
+                temp->setSymbol('P');
+                temp = temp->getParent();
+            }
+            temp->setSymbol('S');
+        } 
+        grid.drawGrid(textures,rects,font,renderer);
+        // Sleep(5000);
+        // return openList;
+
+        ////// Rendering //////
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
+
+        for(int i=0; i<rows; i++){
+            SDL_RenderCopy(renderer, textures[i], NULL, &rects[i]);
         }
 
-        // draw grid
-        if(isleep % 20 == 0){
-            system("CLS");
-            grid.drawGrid();
-        }
+        SDL_RenderPresent(renderer);
     }
-    
-    if(!isFound){
-        cout << "No path found" << endl;}
-    else{
-        //traceback
-        Node* temp = grid.getNode(targetNode.first,targetNode.second);
-        while(temp->getCoords().first != startNode.first || temp->getCoords().second != startNode.second){
-            //cout << "again";
-            temp->setSymbol('P');
-            temp = temp->getParent();
-        }
-        temp->setSymbol('S');
-       cout << temp->getSymbol() << endl;
-    } 
-    system("clear");
-    grid.drawGrid();
-    // Sleep(5000);
-    return openList;
+
 
 }
 
@@ -261,10 +255,10 @@ void clearMemory(){
 
 void initTTF(){
     const char *font_path;
-    font_path = "FreeSans.ttf";
+    font_path = "CONSOLA.TTF";
 
     TTF_Init();
-    font = TTF_OpenFont(font_path, 24);
+    font = TTF_OpenFont(font_path, 20);
 
     if (font == NULL) {
         cout << "error: font not found\n" << endl;
@@ -272,22 +266,39 @@ void initTTF(){
     }
 }
 
-void get_text_and_rect(SDL_Renderer *renderer, int x, int y, const char *text,
-        TTF_Font *font, SDL_Texture **texture, SDL_Rect *rect){
+void get_text_and_rect(SDL_Renderer *renderer, int x, int y, string text,
+        TTF_Font *font, SDL_Texture **texture, SDL_Rect *rect, int rowIndex){
     int text_width;
     int text_height;
+    static string * previousText = new string [rows];
     SDL_Surface *surface;
     SDL_Color textColor = {255, 255, 255, 0};
 
-    surface = TTF_RenderText_Solid(font, text, textColor);
-    *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    text_width = surface->w;
-    text_height = surface->h;
+    // if(rows > 0 && !(*texture)){
+    //     for(int i=0; i<rows; i++){
+    //         previousText[i] = "";
+    //     }
+    // }
 
-    SDL_FreeSurface(surface);
-    rect->x = x;
-    rect->y = y;
-    rect->w = text_width;
-    rect->h = text_height;
+    // cout << "a: " << previousText[rowIndex] << "b: " << text << " ";
+    bool textDiffers = previousText[rowIndex] != text;
+    if(textDiffers){
+        cout << "HIT " << textDiffers << endl;
+
+        surface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+
+        *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        text_width = surface->w;
+        text_height = surface->h;
+
+        SDL_FreeSurface(surface);
+        rect->x = x;
+        rect->y = y;
+        rect->w = text_width;
+        rect->h = text_height;
+
+
+        previousText[rowIndex] = text;
+    }
 }
 
