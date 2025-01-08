@@ -78,7 +78,6 @@ void Grid::drawGrid(SDL_Texture **textures, SDL_Rect *rects, TTF_Font *font, SDL
         for (int j = 0; j < colCount; j++){
            temp += grid2D[i][j]->symbol; 
         }
-        // cout << "STRING " << temp;
 
         if(i == 0){
             get_text_and_rect(renderer, 0, 0, temp, font, &textures[i], &rects[i], i);
@@ -93,7 +92,6 @@ bool Grid::validIndex(int row, int col) const{
     if(row >= 0 && row < rowCount && col >= 0 && col < colCount)
         return true;
     
-  //  cout << "Invalid Index";
     return false;
 
 }

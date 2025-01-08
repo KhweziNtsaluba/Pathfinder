@@ -59,8 +59,8 @@ int main(){
     int windowWidth = (columns * PT_FONT_SIZE * pt_to_px)/2.35; // arbitrary offset
     int windowHeight = rows * PT_FONT_SIZE * pt_to_px; 
 
-    cout << "WIDTH: " << windowWidth << endl;
-    cout << "HEIGHT " << windowHeight << endl;
+    cout << "WINDOW WIDTH: " << windowWidth << endl;
+    cout << "WINDOW HEIGHT " << windowHeight << endl;
     createWindow(windowWidth, windowHeight);
     initTTF();
 
@@ -146,7 +146,6 @@ void FindShortestPath(pair<int,int> startNode, pair<int,int> targetNode, Grid& g
 
                 // find smallest F cost in open list
                 minIndex = findSmallestF(openList);
-                // cout << minIndex;
 
                 current = openList[minIndex];
                 openList.erase(openList.begin() + minIndex);
@@ -218,8 +217,9 @@ void FindShortestPath(pair<int,int> startNode, pair<int,int> targetNode, Grid& g
 
     if(!pathFound){
         SDL_InitSubSystem(SDL_INIT_VIDEO);
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "error", "no path was found!", window);
-        cout << "SHOW MESSAGE ERROR: " << SDL_GetError() << endl;
+    
+        if(SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "error", "no path was found!", window))
+            cout << "ERROR: no path was found! " << "(" << SDL_GetError() << ")" << endl;
     }
 
     SDL_Delay(5000);
