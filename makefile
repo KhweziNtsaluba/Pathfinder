@@ -4,7 +4,7 @@
 CC := g++
 
 # set the compiler flags
-CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -O0 --std=c++11 -Wall -lSDL2_image -lSDL2_ttf -lm
+CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -O0 --std=c++11 -Wall -lSDL2_image -lSDL2_ttf -lm -g
 
 # add header files here
 HDRS := Grid.h

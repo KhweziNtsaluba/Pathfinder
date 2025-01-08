@@ -45,9 +45,18 @@ Grid::Grid(int ROWS, int COLS, string stringMap){
     for(int i = 0; i < ROWS; i++){
         for (int j = 0; j < COLS; j++){
             grid2D[i][j] = new Node(i,j);
-            if(stringMap[arrIndex1D] == '#'){
-                grid2D[i][j]->isWall = true;
-                grid2D[i][j]->symbol = '#';
+            
+            switch (stringMap[arrIndex1D]){
+                case '#': {
+                    grid2D[i][j]->isWall = true;
+                    grid2D[i][j]->symbol = u8"▓";
+                    break;
+                }
+                case 'E': {
+                    grid2D[i][j]->symbol = 'E';
+                    break;
+                }
+                default: break;
             }
             arrIndex1D++;
         }
@@ -69,6 +78,7 @@ void Grid::drawGrid(SDL_Texture **textures, SDL_Rect *rects, TTF_Font *font, SDL
         for (int j = 0; j < colCount; j++){
            temp += grid2D[i][j]->symbol; 
         }
+        // cout << "STRING " << temp;
 
         if(i == 0){
             get_text_and_rect(renderer, 0, 0, temp, font, &textures[i], &rects[i], i);
@@ -99,12 +109,9 @@ void Grid::addNeighbours(Node* parentNode){
     int i = 0, row = -1;
     for(row = -1; row < 2; row++){
         for(int col = -1; col < 2; col++){
-          //  cout << row << "" << col << endl;
             if(validIndex(parentNode->getCoords().first - row, parentNode->getCoords().second - col)
                && ( row !=0 || col != 0)){
-               // cout << "itr " << i << endl;
                 parentNode->neighbours[i] = grid2D[parentNode->getCoords().first - row][parentNode->getCoords().second - col];
-               // parentNode->neighbours[i]->symbol = 'X';
                 i++;
             }
         }

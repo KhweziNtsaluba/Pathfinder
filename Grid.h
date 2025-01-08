@@ -14,7 +14,7 @@ class Node{
         float G_cost, H_cost;
         pair<int,int> coords;
         bool isWall;
-        char symbol;
+        string symbol;
         Node *parent;
         Node *neighbours[8];
 
@@ -28,7 +28,7 @@ class Node{
         Node* getParent() const {return parent;}
         float getG() const {return G_cost;}
         float getH() const {return H_cost;}
-        char getSymbol() const {return symbol;}
+        string getSymbol() const {return symbol;}
         pair<int, int> getCoords() {return make_pair(coords.first,coords.second);}
         bool blocked() const {return isWall;}
         float getF() const {return G_cost + H_cost;}
