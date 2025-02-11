@@ -1,0 +1,3 @@
+/mnt/c/Users/khwez/Documents/Computer Science/Personal Projects/Pathfinding/build/CMakeFiles/Pathfinder.dir
+/mnt/c/Users/khwez/Documents/Computer Science/Personal Projects/Pathfinding/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/khwez/Documents/Computer Science/Personal Projects/Pathfinding/build/CMakeFiles/rebuild_cache.dir
